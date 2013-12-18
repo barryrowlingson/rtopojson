@@ -25,15 +25,29 @@ decodeArcs <- function(topology, arclist){
     pts
 }
 
-decodeFeature <- function(topology,object,n){
-    print(n)
-    if(object$geometries[[n]]$type=="Polygon"){
-        print(object$geometries[[n]]$arc)
-        return(decodeArcs(topology, object$geometries[[n]]$arc[[1]]))
+makePolygons <- function(g,ID){
+    Polygons(g,ID)
+}
+
+decodeFeatureSP <- function(topology,object,n,ID){
+    gtype = object$geometries[[n]]$type
+
+    if(gtype=="Polygon"){
+        return(makePolygons(list(Polygon(decodeArcs(topology, object$geometries[[n]]$arc[[1]]))),ID))
     }
-    return(NULL)
+    if(gtype=="MultiPolygon"){
+        arcs = object$geometries[[n]]$arcs
+        ## create makePolygons(list(Polygon, Polygon,...),ID)
+        ## list of Polygons
+        pl = llply(seq_along(arcs),function(n){Polygon(decodeArcs(topology,arcs[[n]][[1]]))})
+        return(makePolygons(pl,ID))
+    }
+    return(gtype)
 }
-decodeObject <- function(topology, object){
+decodeObjectSP <- function(topology, object){
     stopifnot(is.character(object$type))
-    llply(seq_along(object$geometries), function(n){decodeFeature(topology,object,n)})
+    ID = 0
+    SpatialPolygons(llply(seq_along(object$geometries), function(n){ID<<-ID+1;decodeFeatureSP(topology,object,n,ID)}))
 }
+
+
