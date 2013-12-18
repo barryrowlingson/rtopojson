@@ -26,10 +26,13 @@ decodeArcs <- function(topology, arclist){
 }
 
 makePolygons <- function(g,ID){
+    require(sp)
     Polygons(g,ID)
 }
 
 decodeFeatureSP <- function(topology,object,n,ID){
+    require(sp)
+    require(plyr)
     gtype = object$geometries[[n]]$type
 
     if(gtype=="Polygon"){
@@ -45,6 +48,8 @@ decodeFeatureSP <- function(topology,object,n,ID){
     return(gtype)
 }
 decodeObjectSP <- function(topology, object){
+    require(sp)
+    require(plyr)
     stopifnot(is.character(object$type))
     ID = 0
     SpatialPolygons(llply(seq_along(object$geometries), function(n){ID<<-ID+1;decodeFeatureSP(topology,object,n,ID)}))
